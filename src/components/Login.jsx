@@ -42,6 +42,7 @@ export default function Login() {
                 body: JSON.stringify(input),
             });
             const data = await response.json();
+            console.log(data);
             if (response.status !== 200) {
                 alert(data.message);
                 return;

@@ -44,7 +44,9 @@ export default function AdDetail() {
 
     const fetchAd = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/ads/${id}`);
+            const response = await fetch(`http://localhost:8000/ads/${id}`, {
+                headers: { Authorization: `Bearer ${curr.access_token}` },
+            });
             const data = await response.json();
             console.log(data);
             setDetails(data);
@@ -57,7 +59,10 @@ export default function AdDetail() {
         try {
             const response = await fetch(
                 `http://localhost:8000/ads/${details._id}`,
-                { method: "DELETE" }
+                {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${curr.access_token}` },
+                }
             );
             const data = await response.json();
             alert(data.message);
@@ -76,8 +81,9 @@ export default function AdDetail() {
                     mode: "cors",
                     headers: {
                         "Content-Type": "application/json",
+                        Authorization: `Bearer ${curr.access_token}`,
                     },
-                    body: JSON.stringify({ buyerId: curr.id }),
+                    body: JSON.stringify({ buyerId: curr.data.id }),
                 }
             );
             const data = await response.json();
@@ -90,17 +96,24 @@ export default function AdDetail() {
 
     const handleCloseAd = async (buyerId) => {
         try {
-            const response = await fetch(`http://localhost:8000/ads/${details._id}/close/${buyerId}`, { method: "POST" });
+            const response = await fetch(
+                `http://localhost:8000/ads/${details._id}/close/${buyerId}`,
+                { method: "POST", Authorization: `Bearer ${curr.access_token}` }
+            );
             const data = await response.json();
             alert(data.message);
             return;
-        } catch(error) {
+        } catch (error) {
             console.log(error.message);
         }
-    }
+    };
 
     useEffect(() => {
         fetchAd();
+        // eslint-disable-next-line
+    }, [curr]);
+
+    useEffect(() => {
         setCurr(JSON.parse(localStorage.getItem("userDetails")));
         // eslint-disable-next-line
     }, []);
@@ -117,7 +130,11 @@ export default function AdDetail() {
                         {details.title}
                     </Typography>
                     <Divider sx={{ pt: "10px", pb: "10px" }}>
-                        <Chip variant="outlined" label={details.category} />
+                        <Chip
+                            variant="filled"
+                            color="primary"
+                            label={details.category}
+                        />
                     </Divider>
                     <Typography variant="h5" align="center" p="10px" pb="20px">
                         {details.description}
@@ -148,7 +165,12 @@ export default function AdDetail() {
                                                 label={`${el.name}`}
                                                 color="success"
                                                 variant="outlined"
-                                                onClick={() => details.seller._id === curr.id ? handleCloseAd(el._id) : null}
+                                                onClick={() =>
+                                                    details.seller._id ===
+                                                    curr.data.id
+                                                        ? handleCloseAd(el._id)
+                                                        : null
+                                                }
                                             />
                                         ))}
 
@@ -168,6 +190,7 @@ export default function AdDetail() {
                         {details.buyer && (
                             <>
                                 <Typography variant="button">Buyer</Typography>
+                                {console.log(details.interestedBuyers)}
                                 {details.interestedBuyers.map((el) =>
                                     el._id === details.buyer ? (
                                         <Chip
@@ -192,7 +215,7 @@ export default function AdDetail() {
                                 variant="outlined"
                                 color="error"
                                 startIcon={<DeleteIcon />}
-                                disabled={details.seller._id !== curr.id}
+                                disabled={details.seller._id !== curr.data.id}
                                 onClick={handleClickOpenDelete}
                             >
                                 Delete
@@ -204,9 +227,11 @@ export default function AdDetail() {
                                 color="success"
                                 startIcon={<TouchAppIcon />}
                                 disabled={
-                                    details.seller._id === curr.id ||
-                                    details.buyer ||
-                                    details.interestedBuyers.some(el => el.name === curr.name)
+                                    details.seller._id === curr.data.id ||
+                                    Boolean(details.buyer) ||
+                                    details.interestedBuyers.some(
+                                        (el) => el.name === curr.data.name
+                                    )
                                 }
                                 onClick={handleClickOpenOffer}
                             >

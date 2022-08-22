@@ -75,7 +75,9 @@ export default function Home() {
 
     const fetchCategories = async () => {
         try {
-            const response = await fetch("http://localhost:8000/category");
+            const response = await fetch("http://localhost:8000/category", {
+                headers: { Authorization: `Bearer ${user.access_token}` },
+            });
             const data = await response.json();
             setCategories([{ name: "All" }].concat(data));
         } catch (error) {
@@ -85,7 +87,9 @@ export default function Home() {
 
     const fetchAds = async () => {
         try {
-            const response = await fetch("http://localhost:8000/ads");
+            const response = await fetch("http://localhost:8000/ads", {
+                headers: { Authorization: `Bearer ${user.access_token}` },
+            });
             const data = await response.json();
             setAds(data);
             setFiltered(data);
@@ -102,6 +106,7 @@ export default function Home() {
                 mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.access_token}`,
                 },
                 body: JSON.stringify(input),
             });
@@ -126,7 +131,7 @@ export default function Home() {
         const description = data.get("description");
         const price = data.get("price");
         const category = data.get("category");
-        const seller = user.id;
+        const seller = user.data.id;
         console.log(title, description, price, category, seller);
 
         if (title.length < 6) {
@@ -179,12 +184,16 @@ export default function Home() {
     }, [selected]);
 
     useEffect(() => {
+        fetchCategories();
+        fetchAds();
+        // eslint-disable-next-line
+    }, [user]);
+
+    useEffect(() => {
         const data = localStorage.getItem("userDetails");
         if (data !== null) {
             setUser(JSON.parse(data));
         }
-        fetchCategories();
-        fetchAds();
         // eslint-disable-next-line
     }, []);
 
@@ -279,45 +288,53 @@ export default function Home() {
                         filtered.length > 0 &&
                         filtered.map((el) => (
                             <Grid item sm={6} xs={12} key={el._id}>
-                                <Card
-                                    elevation={3}
-                                    sx={{
-                                        height: "100%",
-                                        borderRadius: "20px",
-                                        display: "flex",
-                                        justifyContent: "center",
-                                    }}
+                                <Tooltip
+                                    title={el.buyer ? 'Item already sold' : `${el.interestedBuyers.length > 0 ? el.interestedBuyers.length : 'No'} interested buyer${el.interestedBuyers.length > 1 ? 's' : ''}`}
+                                    placement="top"
                                 >
-                                    <CardActionArea href={`/ads/${el._id}`}>
-                                        <CardContent sx={{ height: "100%" }}>
-                                            <Typography
-                                                variant="h5"
-                                                align="center"
+                                    <Card
+                                        elevation={3}
+                                        sx={{
+                                            height: "100%",
+                                            borderRadius: "20px",
+                                            display: "flex",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <CardActionArea href={`/ads/${el._id}`}>
+                                            <CardContent
+                                                sx={{ height: "100%" }}
                                             >
-                                                {el.title}
-                                            </Typography>
-                                            <Divider
-                                                sx={{
-                                                    mt: "auto",
-                                                    pt: "10px",
-                                                    pb: "10px",
-                                                }}
-                                            >
-                                                <Chip
-                                                    variant="outlined"
-                                                    label={el.category}
-                                                />
-                                            </Divider>
-                                            <Typography
-                                                variant="body1"
-                                                color="text.secondary"
-                                                align="center"
-                                            >
-                                                {el.description}
-                                            </Typography>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
+                                                <Typography
+                                                    variant="h5"
+                                                    align="center"
+                                                >
+                                                    {el.title}
+                                                </Typography>
+                                                <Divider
+                                                    sx={{
+                                                        mt: "auto",
+                                                        pt: "10px",
+                                                        pb: "10px",
+                                                    }}
+                                                >
+                                                    <Chip
+                                                        variant="filled"
+                                                        label={el.category}
+                                                        color="primary"
+                                                    />
+                                                </Divider>
+                                                <Typography
+                                                    variant="body1"
+                                                    color="text.secondary"
+                                                    align="center"
+                                                >
+                                                    {el.description}
+                                                </Typography>
+                                            </CardContent>
+                                        </CardActionArea>
+                                    </Card>
+                                </Tooltip>
                             </Grid>
                         ))}
                 </Grid>

@@ -19,7 +19,7 @@ export default function Layout() {
     const [user, setUser] = useState(null);
     const [display, setDisplay] = useState(false);
     const navigate = useNavigate();
-    // console.log(user)
+    console.log(user)
 
     const handleClickOpen = () => {
         setDisplay(true);
@@ -63,7 +63,7 @@ export default function Layout() {
                         DummyBuy
                     </Typography>
                     <Typography>
-                        You are signed in as {user && user.name}
+                        You are signed in as {user && user.data.name}
                     </Typography>
                     <Button
                         variant="text"
