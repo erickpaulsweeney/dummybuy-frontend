@@ -42,6 +42,35 @@ export default function AdDetail() {
         setDisplayOffer(false);
     };
 
+    const refreshToken = async () => {
+        console.log(JSON.parse(localStorage.getItem("userDetails")))
+        try {
+            const response = await fetch("http://localhost:8000/category", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: localStorage.getItem("userDetails"),
+            });
+            const data = await response.json();
+            if (response.status !== 200) {
+                alert(data.message);
+                return false;
+            } else {
+                alert(data.message);
+                localStorage.setItem("userDetails", JSON.stringify({
+                    ...curr,
+                    access_token: data.access_token,
+                }));
+                setCurr({
+                    ...curr,
+                    access_token: data.access_token,
+                })
+                return true;
+            }
+        } catch (error) {
+            console.log(error.message);
+        }
+    };
+
     const fetchAd = async () => {
         try {
             const response = await fetch(`http://localhost:8000/ads/${id}`, {
@@ -49,6 +78,13 @@ export default function AdDetail() {
             });
             const data = await response.json();
             console.log(data);
+            if (response.status === 403) {
+                const fetchToken = await refreshToken();
+                if (!fetchToken) {
+                    alert("Something wrong happened. Please login again.");
+                    navigate("/login");
+                }
+            }
             setDetails(data);
         } catch (error) {
             console.log(error.message);
@@ -65,6 +101,13 @@ export default function AdDetail() {
                 }
             );
             const data = await response.json();
+            if (response.status === 403) {
+                const fetchToken = await refreshToken();
+                if (!fetchToken) {
+                    alert("Something wrong happened. Please login again.");
+                    navigate("/login");
+                }
+            }
             alert(data.message);
             navigate("/");
         } catch (error) {
@@ -87,6 +130,13 @@ export default function AdDetail() {
                 }
             );
             const data = await response.json();
+            if (response.status === 403) {
+                const fetchToken = await refreshToken();
+                if (!fetchToken) {
+                    alert("Something wrong happened. Please login again.");
+                    navigate("/login");
+                }
+            }
             alert(data.message);
             handleClickCloseOffer();
         } catch (error) {
@@ -101,6 +151,13 @@ export default function AdDetail() {
                 { method: "POST", Authorization: `Bearer ${curr.access_token}` }
             );
             const data = await response.json();
+            if (response.status === 403) {
+                const fetchToken = await refreshToken();
+                if (!fetchToken) {
+                    alert("Something wrong happened. Please login again.");
+                    navigate("/login");
+                }
+            }
             alert(data.message);
             return;
         } catch (error) {
@@ -137,7 +194,7 @@ export default function AdDetail() {
                         />
                     </Divider>
                     <Typography variant="h5" align="center" p="10px" pb="20px">
-                        {details.description}
+                        {details.description} for ${details.price}
                     </Typography>
                     <Stack spacing={1} alignItems="center" mb="20px">
                         <Typography variant="button">Seller</Typography>
