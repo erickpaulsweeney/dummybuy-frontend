@@ -15,6 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import TouchAppIcon from "@mui/icons-material/TouchApp";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useNavigate, useParams } from "react-router-dom";
+import axiosClient from "../api-config";
 
 const theme = createTheme();
 
@@ -42,128 +43,33 @@ export default function AdDetail() {
         setDisplayOffer(false);
     };
 
-    const refreshToken = async () => {
-        console.log(JSON.parse(localStorage.getItem("userDetails")))
-        try {
-            const response = await fetch("http://localhost:8000/category", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: localStorage.getItem("userDetails"),
-            });
-            const data = await response.json();
-            if (response.status !== 200) {
-                alert(data.message);
-                return false;
-            } else {
-                alert(data.message);
-                localStorage.setItem("userDetails", JSON.stringify({
-                    ...curr,
-                    access_token: data.access_token,
-                }));
-                setCurr({
-                    ...curr,
-                    access_token: data.access_token,
-                })
-                return true;
-            }
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
-
     const fetchAd = async () => {
-        try {
-            const response = await fetch(`http://localhost:8000/ads/${id}`, {
-                headers: { Authorization: `Bearer ${curr.access_token}` },
-            });
-            const data = await response.json();
-            console.log(data);
-            if (response.status === 403) {
-                const fetchToken = await refreshToken();
-                if (!fetchToken) {
-                    alert("Something wrong happened. Please login again.");
-                    navigate("/login");
-                }
-            }
-            setDetails(data);
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
+        const response = await axiosClient.get(`ads/${id}`);
+        setDetails(response.data);
+    }
 
     const handleDelete = async () => {
-        try {
-            const response = await fetch(
-                `http://localhost:8000/ads/${details._id}`,
-                {
-                    method: "DELETE",
-                    headers: { Authorization: `Bearer ${curr.access_token}` },
-                }
-            );
-            const data = await response.json();
-            if (response.status === 403) {
-                const fetchToken = await refreshToken();
-                if (!fetchToken) {
-                    alert("Something wrong happened. Please login again.");
-                    navigate("/login");
-                }
-            }
-            alert(data.message);
-            navigate("/");
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
+        const response = await axiosClient.delete(`ads/${details._id}`);
+        alert(response.data.message);
+        navigate("/");
+    }
 
     const handleOffer = async () => {
-        try {
-            const response = await fetch(
-                `http://localhost:8000/ads/${details._id}/buy`,
-                {
-                    method: "POST",
-                    mode: "cors",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${curr.access_token}`,
-                    },
-                    body: JSON.stringify({ buyerId: curr.data.id }),
-                }
-            );
-            const data = await response.json();
-            if (response.status === 403) {
-                const fetchToken = await refreshToken();
-                if (!fetchToken) {
-                    alert("Something wrong happened. Please login again.");
-                    navigate("/login");
-                }
+        const response = await axiosClient.post(`ads/${details._id}/buy`, { buyerId: curr.data.id }, { 
+            headers: {
+                "Content-Type": "application/json"
             }
-            alert(data.message);
-            handleClickCloseOffer();
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
+        })
+        console.log(response);
+        alert(response.data.message);
+        handleClickCloseOffer();
+    }
 
     const handleCloseAd = async (buyerId) => {
-        try {
-            const response = await fetch(
-                `http://localhost:8000/ads/${details._id}/close/${buyerId}`,
-                { method: "POST", Authorization: `Bearer ${curr.access_token}` }
-            );
-            const data = await response.json();
-            if (response.status === 403) {
-                const fetchToken = await refreshToken();
-                if (!fetchToken) {
-                    alert("Something wrong happened. Please login again.");
-                    navigate("/login");
-                }
-            }
-            alert(data.message);
-            return;
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
+        const response = await axiosClient.post(`ads/${details._id}/close/${buyerId}`);
+        alert(response.data.message);
+        return;
+    }
 
     useEffect(() => {
         fetchAd();

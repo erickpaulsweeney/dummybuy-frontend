@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import CssBaseline from "@mui/material/CssBaseline";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
@@ -35,6 +34,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useState } from "react";
 import { TextField } from "@mui/material";
 import { blue } from "@mui/material/colors";
+import axiosClient from "../api-config";
 
 const theme = createTheme();
 
@@ -51,7 +51,6 @@ export default function Home() {
     const [descError, setDescError] = useState("");
     const [priceError, setPriceError] = useState("");
     const [categoryError, setCategoryError] = useState("");
-    const navigate = useNavigate();
 
     const handleClickOpen = () => {
         setDisplay(true);
@@ -78,107 +77,30 @@ export default function Home() {
         setAnchorEl(null);
     };
 
-    const refreshToken = async () => {
-        console.log(JSON.parse(localStorage.getItem("userDetails")))
-        try {
-            const response = await fetch("http://localhost:8000/auth/token", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: localStorage.getItem("userDetails"),
-            });
-            const data = await response.json();
-            console.log(data);
-            if (response.status !== 200) {
-                alert(data.message);
-                return false;
-            } else {
-                localStorage.setItem("userDetails", JSON.stringify({
-                    ...user,
-                    access_token: data.access_token,
-                }));
-                setUser({
-                    ...user,
-                    access_token: data.access_token,
-                })
-                return true;
-            }
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
-
     const fetchCategories = async () => {
-        try {
-            const response = await fetch("http://localhost:8000/category", {
-                headers: { Authorization: `Bearer ${user.access_token}` },
-            });
-            const data = await response.json();
-            if (response.status === 403) {
-                const fetchToken = await refreshToken();
-                if (!fetchToken) {
-                    alert("Something wrong happened. Please login again.");
-                    localStorage.removeItem("userDetails");
-                    navigate("/login");
-                }
-            }
-            setCategories([{ name: "All" }].concat(data));
-        } catch (error) {
-            console.log(error.message);
-        }
+        const response = await axiosClient.get("category/");
+        setCategories([{ name: "All" }].concat(response.data));
     };
 
     const fetchAds = async () => {
-        try {
-            const response = await fetch("http://localhost:8000/ads", {
-                headers: { Authorization: `Bearer ${user.access_token}` },
-            });
-            const data = await response.json();
-            if (response.status === 403) {
-                const fetchToken = await refreshToken();
-                if (!fetchToken) {
-                    alert("Something wrong happened. Please login again.");
-                    localStorage.removeItem("userDetails");
-                    navigate("/login");
-                }
-            }
-            setAds(data);
-            setFiltered(data);
-            console.log(data);
-        } catch (error) {
-            console.log(error.message);
-        }
+        const response = await axiosClient.get("ads/");
+        setAds(response.data);
+        setFiltered(response.data);
     };
 
     const submitAd = async (input) => {
-        console.log(input);
-        try {
-            const response = await fetch("http://localhost:8000/ads", {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    Authorization: `Bearer ${user.access_token}`,
-                },
-                body: input,
-            });
-            const data = await response.json();
-            if (response.status === 403) {
-                const fetchToken = await refreshToken();
-                if (!fetchToken) {
-                    alert("Something wrong happened. Please login again.");
-                    localStorage.removeItem("userDetails");
-                    navigate("/login");
-                }
-            }
-            if (response.status !== 201) {
-                alert(data.message);
-                return;
-            } else {
-                alert(data.message);
-                handleClickClose();
-                return;
-            }
-        } catch (error) {
-            console.log(error.message);
+        const response = await axiosClient.post("ads/", input, {
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        if (response.status !== 201) {
+            alert(response.data.message);
+            return;
+        } else {
+            alert(response.data.message);
+            handleClickClose();
+            return;
         }
     };
 
@@ -190,11 +112,6 @@ export default function Home() {
         const description = data.get("description");
         const price = data.get("price");
         const category = data.get("category");
-        const image = data.get("image");
-        console.log(image);
-        for (const value of data.values()) {
-            console.log(value);
-        }
 
         if (title.length < 6) {
             setTitleError("Title must be at least 6 characters long");
@@ -393,10 +310,11 @@ export default function Home() {
                                                         ml: "auto",
                                                         mr: "auto",
                                                         transition:
-                                                            "transform 0.15s",
+                                                            "transform 0.15s, bgcolor 0.15s",
                                                         "&:hover": {
                                                             transform:
                                                                 "scale(1.5)",
+                                                            bgcolor: blue[700],
                                                         },
                                                     }}
                                                 >{`$${el.price}`}</Avatar>

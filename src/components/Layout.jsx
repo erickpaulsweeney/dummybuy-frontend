@@ -19,7 +19,7 @@ export default function Layout() {
     const [user, setUser] = useState(null);
     const [display, setDisplay] = useState(false);
     const navigate = useNavigate();
-    console.log(user)
+    // console.log(user)
 
     const handleClickOpen = () => {
         setDisplay(true);
@@ -31,7 +31,7 @@ export default function Layout() {
 
     useEffect(() => {
         const data = localStorage.getItem("userDetails");
-        console.log(data);
+        // console.log(data);
         if (data === null) {
             navigate("/login");
         } else setUser(JSON.parse(data));

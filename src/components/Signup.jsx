@@ -12,6 +12,7 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosClient from "../api-config";
 
 const theme = createTheme();
 
@@ -23,27 +24,19 @@ export default function SignUp() {
     const navigate = useNavigate();
 
     const signUp = async (input) => {
-        try {
-            const response = await fetch("http://localhost:8000/auth/signup", {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(input),
-            });
-            const data = await response.json();
-            if (response.status !== 201) {
-                alert(data.message);
-                return;
-            } else {
-                alert(data.message);
-                navigate("/login");
+        const response = await axiosClient.post("auth/signup", input, { 
+            headers: { 
+                "Content-Type": "application/json"
             }
-        } catch (error) {
-            console.log(error.message);
+        });
+        if (response.status !== 201) {
+            alert(response.data.message);
+            return;
+        } else {
+            alert(response.data.message);
+            navigate("/login");
         }
-    };
+    }
 
     const handleSubmit = (event) => {
         event.preventDefault();

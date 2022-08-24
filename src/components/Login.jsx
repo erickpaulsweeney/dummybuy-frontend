@@ -12,6 +12,7 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axiosClient from "../api-config";
 
 const theme = createTheme();
 
@@ -28,31 +29,20 @@ export default function Login() {
             setUser(JSON.parse(data));
         }
         // eslint-disable-next-line
-    }, [user])
+    }, [user]);
 
     const logIn = async (input) => {
-        console.log(input);
-        try {
-            const response = await fetch("http://localhost:8000/auth/login", {
-                method: "POST",
-                // mode: "cors",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(input),
-            });
-            const data = await response.json();
-            console.log(data);
-            if (response.status !== 200) {
-                alert(data.message);
-                return;
-            }
-            else {
-                localStorage.setItem("userDetails", JSON.stringify(data));
-                navigate("/");
-            }
-        } catch (error) {
-            console.log(error.message);
+        const response = await axiosClient.post(
+            "auth/login",
+            input,
+            { headers: { "Content-Type": "application/json" } }
+        );
+        if (response.status !== 200) {
+            alert(response.data.message);
+            return;
+        } else {
+            localStorage.setItem("userDetails", JSON.stringify(response.data));
+            navigate("/");
         }
     };
 
@@ -61,7 +51,7 @@ export default function Login() {
         const data = new FormData(event.currentTarget);
         const email = data.get("email");
         const password = data.get("password");
-        console.log({ email, password });
+        // console.log({ email, password });
 
         if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
             setEmailError("Invalid email");
